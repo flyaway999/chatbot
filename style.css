@@ -1,0 +1,20 @@
+/* style.css */
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: #f4f7fb; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+.container { width: 95%; max-width: 720px; background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+h1 { margin-top:0; font-size:20px; text-align:center; color:#333; }
+.controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+.controls input { flex:1; padding:8px 10px; border:1px solid #ddd; border-radius:6px; }
+.controls button { padding:8px 12px; border:none; background:#1976d2; color:white; border-radius:6px; cursor:pointer; }
+.status { margin-left:auto; font-size:13px; color:#666; }
+.status.connected { color: green; font-weight:600; }
+
+.messages { height: 360px; overflow:auto; border:1px solid #eee; padding:12px; border-radius:8px; background:#fafafa; margin-bottom:12px; }
+.messages p { margin:6px 0; padding:6px 8px; border-radius:6px; }
+.messages p.msg { background: #ffffff; border: 1px solid #e6e6e6; }
+.messages p.mine { background: #e6f4ff; border: 1px solid #cfeeff; align-self:flex-end; }
+.messages p.system { text-align:center; color:#777; font-style:italic; background:transparent; border:none; padding:4px 0; }
+
+.sendRow { display:flex; gap:8px; }
+.sendRow input { flex:1; padding:10px; border-radius:6px; border:1px solid #ddd; }
+.sendRow button { padding:10px 14px; border-radius:6px; border:none; background:#1976d2; color:white; cursor:pointer; }

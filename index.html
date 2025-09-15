@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Chat em Tempo Real</title>
+</head>
+<body>
+  <div class="container">
+    <h1>Chat em Tempo Real</h1>
+
+    <div class="controls">
+      <input id="nameInput" placeholder="Seu nome" />
+      <button id="enterBtn">Entrar</button>
+      <span id="status" class="status">Desconectado</span>
+    </div>
+
+    <div id="messages" class="messages"></div>
+
+    <div class="sendRow">
+      <input id="messageInput" placeholder="Digite sua mensagem" disabled />
+      <button id="sendBtn" disabled>Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    const nameInput = document.getElementById('nameInput');
+    const enterBtn = document.getElementById('enterBtn');
+    const statusSpan = document.getElementById('status');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    // Conecta ao mesmo host/porta do servidor HTTP (server.js)
+    const ws = new WebSocket(`ws://${location.host}`);
+
+    let myName = null;
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString();
+    }
+
+    function addMessage(el, className = '') {
+      el.className = className;
+      messagesDiv.appendChild(el);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    ws.onopen = () => {
+      statusSpan.textContent = 'Conectado (aguardando nome)';
+      statusSpan.classList.add('connected');
+      console.log('WebSocket aberto');
+    };
+
+    ws.onmessage = (evt) => {
+      let msg;
+      try {
+        msg = JSON.parse(evt.data);
+      } catch {
+        console.warn('Mensagem não-JSON recebida:', evt.data);
+        return;
+      }
+
+      if (msg.type === 'system') {
+        const p = document.createElement('p');
+        p.innerHTML = `<em>[${formatTime(msg.time)}] ${msg.text}</em>`;
+        addMessage(p, 'system');
+      } else if (msg.type === 'message') {
+        const p = document.createElement('p');
+        const isMine = msg.name === myName;
+        p.innerHTML = `<strong>${msg.name}</strong> <span class="time">[${formatTime(msg.time)}]</span>: ${msg.text}`;
+        addMessage(p, isMine ? 'mine' : 'msg');
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('WebSocket erro:', err);
+    };
+
+    ws.onclose = () => {
+      statusSpan.textContent = 'Desconectado';
+      statusSpan.classList.remove('connected');
+      const p = document.createElement('p');
+      p.innerHTML = `<em>Conexão com o servidor fechada.</em>`;
+      addMessage(p, 'system');
+    };
+
+    enterBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      if (!name) {
+        alert('Digite seu nome antes de entrar.');
+        return;
+      }
+      myName = name;
+      // envia mensagem de join pro servidor
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'join', name }));
+        statusSpan.textContent = `Conectado como ${name}`;
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        nameInput.disabled = true;
+        enterBtn.disabled = true;
+      } else {
+        alert('Aguarde: conexão WebSocket ainda não foi aberta.');
+      }
+    });
+
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      if (ws.readyState !== WebSocket.OPEN) {
+        alert('WebSocket não está aberto.');
+        return;
+      }
+      ws.send(JSON.stringify({ type: 'message', text }));
+      messageInput.value = '';
+      messageInput.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>
